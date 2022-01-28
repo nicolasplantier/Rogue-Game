@@ -69,6 +69,7 @@ DIRECTIONS = {
 
 #Première pièce
 money_initial_pos = [14, 2]
+food_initial_pos = [13, 1]
 
 # --------------------------------------------------------------------------------------------------
 
@@ -156,6 +157,37 @@ class Money:
         self.print_money()
         pg.display.set_caption(f"Score : {self.score}")
 
+class Food:
+    def __init__(self, life_score = 5, position = food_initial_pos, counter = 0):
+        self.life_score = life_score
+        self.position = position
+        self.counter = counter
+    
+    def place_food(self, board_game):
+        accessible_pos = [room for room in board_game.rooms if board_game.character.position != room]
+        self.position = choice(accessible_pos)
+    
+    def print_food(self):
+        pg.draw.circle(screen, GREEN, (self.position[0]*W + 10, self.position[1]*H + 10), 8)
+    
+    def eating(self, board_game, money):
+        if board_game.character.position == self.position:
+            self.counter = 0
+            if self.life_score < 5:
+                self.life_score += 1
+            self.place_food(board_game)
+        else:
+            self.counter += 1
+            if self.counter == 7:
+                self.life_score -= 1
+                self.counter = 0
+        if self.life_score == 0:
+            print(f"Game Over : Mort de faim avec {money.score} pièces")
+            pg.quit()
+            exit()
+        pg.display.set_caption(f"Life Score : {self.life_score}")
+        self.print_food()
+
 
 pg.init()
 screen = pg.display.set_mode((400, 400)) #1 case = 20x20 pixels
@@ -165,6 +197,8 @@ running = True
 board = Board_Game(walls, corridors, doors, rooms, character)
 money = Money()
 money.gain_money(board)
+food = Food()
+food.eating(board, money)
 while running:
     clock.tick(1)
     for event in pg.event.get():
@@ -185,4 +219,5 @@ while running:
     board = Board_Game(walls, corridors, doors, rooms, character)
     board.color()
     money.gain_money(board)
+    food.eating(board, money)
     pg.display.update()
