@@ -56,6 +56,14 @@ for x in range(11, 18):
 wall_bis = [[1, 14], [2, 14], [4, 14], [5, 14], [10, 13], [10, 14], [10, 15], [10, 16], [11, 13], [12, 13], [13, 13], [11, 9], [12, 9], [13, 9], [15, 9], [16, 9], [17, 9], [11, 5], [12, 5], [13, 5], [14, 5], [16, 5], [17, 5], [12, 3], [13, 3], [14, 3], [16, 3]]
 walls += wall_bis
 
+#Directions
+DIRECTIONS = {
+    "DOWN": (0, +1),
+    "UP": (0, -1),
+    "RIGHT": (+1, 0),
+    "LEFT": (-1, 0),
+}
+
 
 # --------------------------------------------------------------------------------------------------
 
@@ -75,13 +83,38 @@ def draw_tile(screen, x, y, color):
 def draw_background(screen):
     screen.fill(BLACK)
 
+
+class Character:
+    def __init__(self, position, direction): #position = liste de 2 coordonnées [x,y] #direction = un tupple du dictionnaire DIRECTIONS
+        self.position = position 
+        self.direction = direction 
+    
+    def set_direction(self,direction):
+        if direction in DIRECTIONS: 
+            self.direction = DIRECTIONS[str(direction)]
+    
+    def move(self, board_game):
+        x, y = self.position[0], self.position[1]
+        dx, dy = self.direction 
+        new_position = [x+dx, y+dy] 
+        if new_position in board_game.walls: #le personnage ne peut pas traverser les murs 
+            print("Attention au mur")
+            #self.position = self.position #le personnage reste à sa position 
+        elif self.position in board_game.corridors: #si le personnage est dans un couloir, il ne peut pas sortir du couloir (il est forcé de suivre le chemin défini par le couloir)
+            if (new_position in board_game.corridors) or (new_position in board_game.doors):
+                self.position = new_position #le perso avance dans le couloir ou sort du couloir par la porte 
+            else:
+                print("Tu ne peux pas sortir du couloir")
+        else:
+            self.position = new_position
+
 class Board_Game:
-    def __init__(self, walls, corridors, doors, rooms):
+    def __init__(self, walls, corridors, doors, rooms, character):
         self.walls = walls #liste des coordonnées des cases avec des murs
         self.corridors = corridors
         self.doors = doors
         self.rooms = rooms
-        #self.character = character #de class Character
+        self.character = character #de class Character
     
     def color(self):
         for wall in self.walls:
@@ -92,19 +125,31 @@ class Board_Game:
             draw_tile(screen, door[0], door[1], ORANGE)
         for room in self.rooms:
             draw_tile(screen, room[0], room[1], WHITE)
-        #character = self.character
-        #draw_tile(screen, character.position[0], character.position[1], GREEN)
+        character = self.character
+        draw_tile(screen, character.position[0], character.position[1], GREEN)
 
 
 pg.init()
 screen = pg.display.set_mode((400, 400)) #1 case = 20x20 pixels
 
+character = Character([16, 0], (0, 1))
 running = True
+board = Board_Game(walls, corridors, doors, rooms, character)
 while running:
     clock.tick(1)
     for event in pg.event.get():
         if event.type == pg.QUIT:
             running = False
-    board = Board_Game(walls, corridors, doors, rooms)
+        elif event.type == pg.KEYDOWN:
+            if event.key == pg.K_DOWN:
+                character.set_direction("DOWN")
+            if event.key == pg.K_UP:
+                character.set_direction("UP")
+            if event.key == pg.K_RIGHT:
+                character.set_direction("RIGHT")
+            if event.key == pg.K_LEFT:
+                character.set_direction("LEFT")
+    character.move(board)
+    board = Board_Game(walls, corridors, doors, rooms, character)
     board.color()
     pg.display.update()
