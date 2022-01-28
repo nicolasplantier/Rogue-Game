@@ -1,4 +1,5 @@
 import pygame as pg
+from random import choice
 
 # Constants
 # --------------------------------------------------------------------------------------------------
@@ -18,6 +19,7 @@ RED = (160, 0, 0)
 ORANGE = (255, 127, 0)
 GREY = (100, 100, 100)
 GREEN = (0, 160, 0)
+BLUE = (0, 0, 160)
 
 #Plateau fixe
 doors = [[15, 3], [15, 5], [14, 9], [14, 13], [10, 17], [3, 14]]
@@ -65,6 +67,8 @@ DIRECTIONS = {
     #"NO_MOVE": (0, 0)
 }
 
+#Première pièce
+money_initial_pos = [14, 2]
 
 # --------------------------------------------------------------------------------------------------
 
@@ -129,6 +133,29 @@ class Board_Game:
         character = self.character
         draw_tile(screen, character.position[0], character.position[1], GREEN)
 
+class Money:
+    def __init__(self, score = 0, position = money_initial_pos):
+        self.score = score
+        self.position = position
+    
+    def get_money(self):
+        self.score += 1
+    
+    def place_money(self, board_game):
+        accessible_pos = [room for room in board_game.rooms if board_game.character.position != room]
+        self.position = choice(accessible_pos)
+
+    def print_money(self):
+        pg.draw.circle(screen, BLUE, (self.position[0]*W + 10, self.position[1]*H + 10), 8)
+    
+    def gain_money(self, board_game):
+        #for _ in range(5):
+        if board_game.character.position == self.position:
+            self.get_money()
+            self.place_money(board_game)
+        self.print_money()
+        pg.display.set_caption(f"Score : {self.score}")
+
 
 pg.init()
 screen = pg.display.set_mode((400, 400)) #1 case = 20x20 pixels
@@ -136,6 +163,8 @@ screen = pg.display.set_mode((400, 400)) #1 case = 20x20 pixels
 character = Character([16, 0], (0, 1))
 running = True
 board = Board_Game(walls, corridors, doors, rooms, character)
+money = Money()
+money.gain_money(board)
 while running:
     clock.tick(1)
     for event in pg.event.get():
@@ -155,5 +184,5 @@ while running:
     character.move(board)
     board = Board_Game(walls, corridors, doors, rooms, character)
     board.color()
-    pg.draw.circle(screen, (0, 0, 255), (200+10, 200+10), 8)
+    money.gain_money(board)
     pg.display.update()
