@@ -62,6 +62,7 @@ DIRECTIONS = {
     "UP": (0, -1),
     "RIGHT": (+1, 0),
     "LEFT": (-1, 0),
+    #"NO_MOVE": (0, 0)
 }
 
 
@@ -149,7 +150,10 @@ while running:
                 character.set_direction("RIGHT")
             if event.key == pg.K_LEFT:
                 character.set_direction("LEFT")
+        #else:
+            #character.set_direction("NO_MOVE")
     character.move(board)
     board = Board_Game(walls, corridors, doors, rooms, character)
     board.color()
+    pg.draw.circle(screen, (0, 0, 255), (200+10, 200+10), 8)
     pg.display.update()
